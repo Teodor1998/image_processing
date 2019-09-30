@@ -1,0 +1,46 @@
+
+                        #################################
+                        #             README            #
+                        #                               #
+                        #   Image processing with MPI   #
+                        #    Made by: Teodor Apostol    #
+                        #                               #
+                        #################################
+
+
+    In my implementation I used two data structures:
+        - colors : that contains 3 bytes (R,G,B)
+        - image : that contains info about the image and the pixels themselves
+
+    Functions:
+    -   readInpus() is used to read the image from file and store it into an
+    image variable
+    -   writeData() is used to print the output image into a file
+    
+        The program starts with a condition: if there is a single process, there
+    will be used no send or recieve function and the entire edit will be done by
+    the root process (the one with rank 0).
+        All images are stored into a single dimension array that is stored on the
+    heap. The algorithm is based on the applyFilter() function that iterates through
+    the image (ignoring first and last lines) and processing the ones between.
+        For each pixel the program builds a matrix of 9 elements, containing the pixels
+    around it and multiplying the matrix with one of the constant filter matrixes. For
+    the new pixel to be computed I used two auxiliary functions, one for the black and
+    white images and one for the colored images. The functions are: filterUseColored()
+    and filterUseBW().
+        If there are multiple processes, the root won't modify any image, it will manage
+    the other processes work.
+        In the first loop (one loop for each filter), the root will read from file the
+    input image and then will compute how many lines will be computed per process. After
+    this step, the root will send the header of the image (dimensions and type) and on
+    a separate send call the pixel matrix.
+        The other processes will recieve the data and will use the applyFilter() function
+    to modify the image partition they recieved. The result is then sent back to the root.
+
+        NOTE: The workers recieve the image to process with one line above and one line
+    below to be able to form all the pixel matrixes.
+
+        In the end, the root adds to the output image the first and the last lines (those
+    were not processed) and after that it recieves the data from the workers.
+        The output image is then placed in the input one and the process is repeated for
+    next filter.
